@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Spotify Application</title>
+	<!-- HTMX -->
+	<script src="https://unpkg.com/htmx.org@2.0.4"
+		integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+		crossorigin="anonymous"></script>
+	<style>
+	</style>
+</head>
+
+<body>
+	<h1>Book Recommendations</h1>
+	<p>{{ data }}</p>
+
+	<button hx-post="/get-response" hx-trigger="click" hx-target="#get-response" hx-swap="outerHTML">Update
+		Page</button>
+
+	<div id="get-response"></div>
+</body>
+
+</html>
