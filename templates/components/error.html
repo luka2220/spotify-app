@@ -21,13 +21,8 @@
 <body>
 	{% include 'components/header.html' %}
 
-	<h1>Book Recommendations</h1>
-	<p>{{ data }}</p>
-
-	<button hx-post="/get-response" hx-trigger="click" hx-target="#get-response" hx-swap="outerHTML">Update
-		Page</button>
-
-	<div id="get-response"></div>
+	<h1>An error occured</h1>
+	<p>{{ error }}</p>
 </body>
 
 </html>
