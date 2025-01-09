@@ -19,9 +19,13 @@
 </head>
 
 <body>
-	{% include 'components/header.html' %}
+	{% if(auth == True) %}
+	{% include 'components/auth_header.html' %}
+	{% else %}
+	{% include 'components/unauth_header.html' %}
+	{% endif %}
 
-	<h1>Book Recommendations</h1>
+	<h1>Spotify Application</h1>
 	<p>{{ data }}</p>
 
 	<button hx-post="/get-response" hx-trigger="click" hx-target="#get-response" hx-swap="outerHTML">Update

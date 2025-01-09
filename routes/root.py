@@ -1,23 +1,36 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, redirect, render_template, request, session
 import requests
 import os
 
 root_bp = Blueprint("root", __name__)
 
 
+# NOTE: Left off trying to update state on the html pages being rendered.
+# Need to create a header component for authorized users to see their username and maybe even profile picture. The welcome text ahould also render differently for authenticated users.
+
+
 @root_bp.route("/", methods=["GET"])
 def home():
+    authorized = session.get("authorized")
     data = "some random data string"
+    user = None
 
-    return render_template("index.html", data=data)
+    print(f"authorized state {authorized}")
+
+    if authorized:
+        user = "user123"
+        data = "Hello user123"
+
+    return render_template("index.html", data=data, auth=authorized, user=user)
 
 
 @root_bp.route("/home/authenticated")
 def home_authenticated():
-    os_state = os.getenv("state")
+    session_state = session.get("state")
     request_state = request.args.get("state")
 
-    if os_state != request_state:
+    if session_state != request_state:
+        print("auth state does not match with cache state")
         error = "An internal error occured, please contact developer... ;)"
         return render_template("components/error.html", error=error)
 
@@ -25,9 +38,11 @@ def home_authenticated():
         "code"
     )  # extracts the `code` query parameter from the incoming request
     credentials = get_access_token(authorization_code=code)
-    os.environ["token"] = credentials["access_token"]
+    print(f"credentials response from get_access_token() = {credentials}")
+    session["token"] = credentials["access_token"]
+    session["authorized"] = True
 
-    return "You are authenticated with spotify"
+    return redirect("/")
 
 
 def get_access_token(authorization_code):
@@ -45,6 +60,7 @@ def get_access_token(authorization_code):
     response = requests.post(spotify_request_access_token_url, data=body)
 
     if response.status_code == 200:
+        print(response.json())
         return response.json()
     else:
         print("possible CSRF attack")
