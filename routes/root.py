@@ -1,12 +1,15 @@
 from flask import Blueprint, redirect, render_template, request, session
 import requests
-import os
 
 root_bp = Blueprint("root", __name__)
 
 
-# NOTE: Left off trying to update state on the html pages being rendered.
-# Need to create a header component for authorized users to see their username and maybe even profile picture. The welcome text ahould also render differently for authenticated users.
+@root_bp.before_app_request
+def before_profile_request():
+    if request.path == "/profile":
+        user = session.get("username")
+        if not user:
+            return "Signin to access your profile", 403
 
 
 @root_bp.route("/", methods=["GET"])
@@ -15,55 +18,45 @@ def home():
     data = "some random data string"
     user = None
 
-    print(f"authorized state {authorized}")
-
     if authorized:
-        user = "user123"
-        data = "Hello user123"
+        store_user_data()
+        data = f"welcome {session["username"]}"
+        user = session["username"]
 
     return render_template("index.html", data=data, auth=authorized, user=user)
 
 
-@root_bp.route("/home/authenticated")
-def home_authenticated():
-    session_state = session.get("state")
-    request_state = request.args.get("state")
-
-    if session_state != request_state:
-        print("auth state does not match with cache state")
-        error = "An internal error occured, please contact developer... ;)"
-        return render_template("components/error.html", error=error)
-
-    code = request.args.get(
-        "code"
-    )  # extracts the `code` query parameter from the incoming request
-    credentials = get_access_token(authorization_code=code)
-    print(f"credentials response from get_access_token() = {credentials}")
-    session["token"] = credentials["access_token"]
-    session["authorized"] = True
-
-    return redirect("/")
-
-
-def get_access_token(authorization_code):
-    """Sends a post request to get the access token from spotify"""
-
-    spotify_request_access_token_url = "https://accounts.spotify.com/api/token/?"
-    body = {
-        "grant_type": "authorization_code",
-        "code": authorization_code,
-        "client_id": os.getenv("CLIENT_ID"),
-        "client_secret": os.getenv("CLIENT_SECRET"),
-        "redirect_uri": os.getenv("REDIRECT_URI"),
+@root_bp.route("/profile", methods=["GET"])
+def profile_data():
+    """Renders the profile page with users spotify data and top playlists and songs"""
+    user_data = session["user_data"]
+    spotify_profile_link = session["user_data"]["external_urls"]["spotify"]
+    profile_data = {
+        "Username": user_data["display_name"],
+        "Email": user_data["email"],
+        "Country": user_data["country"],
+        "Followers": user_data["followers"]["total"],
+        "Product": user_data["product"],
+        "Account Type": user_data["type"],
     }
 
-    response = requests.post(spotify_request_access_token_url, data=body)
+    return render_template(
+        "components/profile.html",
+        profile_data=profile_data,
+        spotify_profile_link=spotify_profile_link,
+    )
 
-    if response.status_code == 200:
-        print(response.json())
-        return response.json()
-    else:
-        print("possible CSRF attack")
-        if request.args.get("error") is not None:
-            print(request.args.get("error"))
-        raise Exception("Failed to obtain Access token")
+
+def store_user_data():
+    """Retrives the users data from spotify"""
+    user = requests.get(
+        "https://api.spotify.com/v1/me",
+        headers={"Authorization": f"Bearer {session["token"]}"},
+    )
+
+    if user.status_code != 200:
+        raise Exception("Error reteiving user data from spotify API")
+
+    session["user_id"] = user.json()["id"]
+    session["username"] = user.json()["display_name"]
+    session["user_data"] = user.json()
