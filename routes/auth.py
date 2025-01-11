@@ -1,7 +1,8 @@
-from flask import Blueprint, redirect, session
+from flask import Blueprint, redirect, session, request, render_template
 import os
 import urllib.parse
 import uuid
+import requests
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -28,8 +29,56 @@ def spotify_login():
     return redirect(auth_url)
 
 
+@auth_bp.route("/home/authenticated")
+def home_authenticated():
+    session_state = session.get("state")
+    request_state = request.args.get("state")
+
+    if session_state != request_state:
+        print("auth state does not match with cache state")
+        error = "An internal error occured, please contact developer... ;)"
+        return render_template("components/error.html", error=error)
+
+    code = request.args.get(
+        "code"
+    )  # extracts the `code` query parameter of the incoming request fro spotify
+
+    credentials = get_access_token(authorization_code=code)
+    if credentials is not None:
+        session["token"] = credentials["access_token"]
+        session["authorized"] = True
+
+        return redirect("/")
+
+    return redirect("/logout")
+
+
+def get_access_token(authorization_code):
+    """Sends a post request to get the access token from spotify"""
+
+    spotify_request_access_token_url = "https://accounts.spotify.com/api/token/?"
+    body = {
+        "grant_type": "authorization_code",
+        "code": authorization_code,
+        "client_id": os.getenv("CLIENT_ID"),
+        "client_secret": os.getenv("CLIENT_SECRET"),
+        "redirect_uri": os.getenv("REDIRECT_URI"),
+    }
+
+    response = requests.post(spotify_request_access_token_url, data=body)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("possible CSRF attack")
+        if request.args.get("error") is not None:
+            print(request.args.get("error"))
+        return None
+
+
 @auth_bp.route("/logout")
 def logout():
     """Sends the user to logout from their spotify account"""
-    session["authorized"] = False
+    print(f"{session["user_data"]["display_name"]} logged out")
+    session.clear()
     return redirect("https://www.spotify.com/logout/")
