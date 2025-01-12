@@ -1,11 +1,19 @@
-from flask import Blueprint, redirect, render_template, request, session
+from flask import Blueprint, render_template, request, session
 import requests
+import time
 
 root_bp = Blueprint("root", __name__)
 
 
-@root_bp.before_app_request
+@root_bp.before_request
 def before_profile_request():
+    if session.get("authorized") and session.get("refresh_token_timer"):
+        if (
+            session["authorized"]
+            and time.time() - session["refresh_token_timer"] > 3600.00
+        ):
+            refresh_token()
+
     if request.path == "/profile":
         user = session.get("username")
         if not user:
@@ -20,7 +28,7 @@ def home():
 
     if authorized:
         store_user_data()
-        data = f"welcome {session["username"]}"
+        data = f"welcome {session['username']}"
         user = session["username"]
 
     return render_template("index.html", data=data, auth=authorized, user=user)
@@ -51,7 +59,7 @@ def store_user_data():
     """Retrives the users data from spotify"""
     user = requests.get(
         "https://api.spotify.com/v1/me",
-        headers={"Authorization": f"Bearer {session["token"]}"},
+        headers={"Authorization": f"Bearer {session['access_token']}"},
     )
 
     if user.status_code != 200:
@@ -60,3 +68,21 @@ def store_user_data():
     session["user_id"] = user.json()["id"]
     session["username"] = user.json()["display_name"]
     session["user_data"] = user.json()
+
+
+def refresh_token():
+    """Sends a request to the spotify API to refresh our access token"""
+    credentials = requests.post(
+        "https://accounts.spotify.com/api/token",
+        headers={
+            "grant_type": "refresh_token",
+            "refresh_token": session["refresh_token"],
+        },
+    )
+
+    if credentials.status_code == 200:
+        credentials_json = credentials.json()
+        session["access_token"] = credentials_json["access_token"]
+        session["authorized"] = True
+        session["refresh_token"] = credentials_json["refresh_token"]
+        session["refresh_token_timer"] = time.time()

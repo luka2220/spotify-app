@@ -3,6 +3,7 @@ import os
 import urllib.parse
 import uuid
 import requests
+import time
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -10,7 +11,6 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/login", methods=["GET"])
 def spotify_login():
     """Sends the user to authenticate them with thier spotify account"""
-
     session["state"] = str(uuid.uuid4())
 
     auth_params = {
@@ -39,14 +39,14 @@ def home_authenticated():
         error = "An internal error occured, please contact developer... ;)"
         return render_template("components/error.html", error=error)
 
-    code = request.args.get(
-        "code"
-    )  # extracts the `code` query parameter of the incoming request fro spotify
+    code = request.args.get("code")
 
     credentials = get_access_token(authorization_code=code)
     if credentials is not None:
-        session["token"] = credentials["access_token"]
+        session["access_token"] = credentials["access_token"]
         session["authorized"] = True
+        session["refresh_token"] = credentials["refresh_token"]
+        session["refresh_token_timer"] = time.time()
 
         return redirect("/")
 
@@ -79,6 +79,6 @@ def get_access_token(authorization_code):
 @auth_bp.route("/logout")
 def logout():
     """Sends the user to logout from their spotify account"""
-    print(f"{session["user_data"]["display_name"]} logged out")
+    print(f"{session['user_data']['display_name']} logged out")
     session.clear()
     return redirect("https://www.spotify.com/logout/")
