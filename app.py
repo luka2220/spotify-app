@@ -12,9 +12,9 @@ load_dotenv(".env")
 def create_app():
     app = Flask(__name__)
 
-    app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_PERMANENT"] = True
     app.config["SESSION_TYPE"] = "filesystem"
-    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=80)
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     Session(app)
