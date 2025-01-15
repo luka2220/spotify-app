@@ -12,6 +12,8 @@ load_dotenv(".env")
 def create_app():
     app = Flask(__name__)
 
+    # TODO: Add the as the session store on the server
+
     app.config["SESSION_PERMANENT"] = True
     app.config["SESSION_TYPE"] = "filesystem"
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)

@@ -1,9 +1,11 @@
-from flask import Blueprint, redirect, session, request, render_template
+from flask import Response, Blueprint, redirect, session, request, render_template
 import os
-import urllib.parse
+from urllib.parse import urlencode
 import uuid
 import requests
 import time
+
+from store.data import SessionStore
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -22,9 +24,7 @@ def spotify_login():
         "show_dialog": "true",
     }
 
-    auth_url = "https://accounts.spotify.com/authorize/?" + urllib.parse.urlencode(
-        auth_params
-    )
+    auth_url = "https://accounts.spotify.com/authorize/?" + urlencode(auth_params)
 
     return redirect(auth_url)
 
@@ -76,9 +76,10 @@ def get_access_token(authorization_code):
         return None
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
     """Sends the user to logout from their spotify account"""
-    print(f"{session['user_data']['display_name']} logged out")
+
+    print(f"{SessionStore.get_current_user()['Username']} logged out")
     session.clear()
-    return redirect("https://www.spotify.com/logout/")
+    return Response(status=303, headers={"HX-Redirect": "/"})
