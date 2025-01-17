@@ -1,28 +1,21 @@
 {
   "name": "spotify-app",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
+    "start": "node dist/app.js",
+    "dev": "ts-node src/app.ts",
     "format": "npx prettier --write ."
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/luka2220/spotify-app.git"
-  },
+
   "keywords": [],
   "author": "luka2220",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/luka2220/spotify-app/issues"
-  },
-  "homepage": "https://github.com/luka2220/spotify-app#readme",
   "description": "",
   "devDependencies": {
     "@types/node": "^22.10.7",
+    "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"

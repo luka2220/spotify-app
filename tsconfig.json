@@ -6,8 +6,9 @@
         "strict": true,
         "skipLibCheck": true,
         "outDir": "./dist",
-        "rootDir": "./"
+        "rootDir": "./",
     },
     "include": ["src/**/*.ts", "test/**/*.test.ts"],
     "exclude": ["node_modules"]
 }
+     
