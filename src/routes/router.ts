@@ -1,4 +1,12 @@
-import { IncomingRequest, OutgoingResponse, RegisteredRoutes } from "./types";
+import { IncomingRequest, OutgoingResponse } from "./types";
+
+export enum RegisteredRoutes {
+	Home = "/",
+	Login = "/login",
+	Logout = "/logout",
+	Redirect = "home/authenticated",
+	Profile = "/profile"
+}
 
 export function ParseIncomingURL({ url, method }: IncomingRequest): OutgoingResponse {
 	if (url === undefined) throw new Error("URL is not defined on incoming request");
