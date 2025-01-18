@@ -8,7 +8,7 @@
         "outDir": "./dist",
         "rootDir": "./",
     },
-    "include": ["src/**/*.ts", "types.d.ts", "test/**/*.test.ts"],
+    "include": ["src/**/*.ts"],
     "exclude": ["node_modules"]
 }
      
